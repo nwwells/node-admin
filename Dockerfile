@@ -6,7 +6,7 @@ WORKDIR /node-admin
 # Copy package.json and install dependencies
 #   - we do this first to take advantage of caching
 ARG NPM_TOKEN
-COPY ./config/.npmrc /node-admin/.npmrc
+COPY ./.npmrc /node-admin/.npmrc
 COPY ./package.json /node-admin/package.json
 COPY ./yarn.lock /node-admin/yarn.lock
 
@@ -23,4 +23,4 @@ RUN ["yarn", "run", "build"]
 
 FROM nginx:1.13.3-alpine
 COPY --from=webpack /node-admin/build/ /var/www/
-COPY ./config/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
