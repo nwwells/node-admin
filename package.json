@@ -14,6 +14,7 @@
     "eslint-config-airbnb": "^15.1.0",
     "eslint-plugin-react": "^7.3.0",
     "husky": "^0.14.3",
+    "jest-junit": "^3.0.0",
     "lint-staged": "^4.2.2",
     "prettier": "^1.7.0",
     "react-styleguidist": "^6.0.25",
@@ -27,7 +28,9 @@
     "start": "react-scripts start",
     "styleguide": "styleguidist server",
     "styleguide:build": "styleguidist build",
-    "test": "CI=true react-scripts test --env=jsdom"
+    "test": "CI=true react-scripts test --env=jsdom",
+    "test:ci": "react-scripts test --env=jsdom --coverage --testResultsProcessor=jest-junit",
+    "test:watch": "react-scripts test --env=jsdom --watch"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,json,css}": [

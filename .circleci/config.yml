@@ -1,0 +1,105 @@
+version: 2
+jobs:
+
+  build:
+    docker:
+      - image: node:8.4.0
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install
+          command: yarn
+      - save_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+      - run:
+          name: Lint
+          command: yarn lint
+      - run:
+          name: Test
+          command: yarn test:ci
+      - store_test_results:
+          path: junit.xml
+      - store_artifacts:
+          path: junit.xml
+          prefix: tests
+      - store_artifacts:
+          path: coverage
+          prefix: coverage
+
+  push_hash:
+    docker:
+      - image: quay.io/symbiont/circleci-2-executor
+    steps:
+      - checkout
+      - setup_remote_docker:
+          reusable: true
+          version: 17.06.0-ce
+      - run:
+          name: Setup Environment
+          command: |
+            set -o xtrace
+            echo $GCLOUD_SERVICE_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud config set project development-148212
+      - run:
+          name: Build Docker Image
+          command: |
+            set -o xtrace
+            CIRCLE_HASH_TAG=$(echo $CIRCLE_SHA1 | head -c 8)
+            gcloud docker -- build -t node-admin --build-arg NPM_TOKEN=$NPM_TOKEN .
+            gcloud docker -- tag node-admin us.gcr.io/development-148212/node-admin:$CIRCLE_HASH_TAG
+            gcloud docker -- push us.gcr.io/development-148212/node-admin:$CIRCLE_HASH_TAG
+
+  push_tag:
+    docker:
+      - image: quay.io/symbiont/circleci-2-executor
+    steps:
+      - checkout
+      - setup_remote_docker:
+          reusable: true
+          version: 17.06.0-ce
+      - run:
+          name: Setup Environment
+          command: |
+            set -o xtrace
+            echo $GCLOUD_SERVICE_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud config set project development-148212
+      - run:
+          name: Build Docker Image
+          command: |
+            set -o xtrace
+            gcloud docker -- build -t node-admin --build-arg NPM_TOKEN=$NPM_TOKEN .
+            gcloud docker -- tag node-admin us.gcr.io/development-148212/node-admin:$CIRCLE_TAG
+            gcloud docker -- push us.gcr.io/development-148212/node-admin:$CIRCLE_TAG
+
+
+workflows:
+  version: 2
+  node-admin:
+    jobs:
+      - build:
+          context: org-global
+          filters:
+            tags:
+              only: /v.*/
+      - push_hash:
+          context: org-global
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v.*/
+      - push_tag:
+          context: org-global
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v.*/
+            branches:
+              ignore: /.*/
