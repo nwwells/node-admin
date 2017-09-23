@@ -1,0 +1,22 @@
+# version control
+.git/
+
+# platform specific (OS's, IDE's)
+.DS_Store
+.idea/
+
+# installed dependencies
+node_modules/
+
+# Don't rebuild the JS if only the docker stuff has changed
+Dockerfile
+.dockerignore
+
+# manifests aren't needed in the image
+manifests/
+
+# built and temporary files
+coverage/
+build/
+dist/
+.tmp/
