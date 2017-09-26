@@ -35,6 +35,9 @@
   "lint-staged": {
     "src/**/*.{js,jsx,json,css}": [
       "prettier --single-quote --trailing-comma es5 --print-width 100 --write",
+      "git add"
+    ],
+    "src/**/*.{js,jsx,json}": [
       "eslint",
       "git add"
     ]
